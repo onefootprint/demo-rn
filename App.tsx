@@ -1,131 +1,94 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import { Fp, type FormValues } from "@onefootprint/footprint-react-native";
+import React, { useState } from "react";
+import { Alert } from "react-native";
+import Step1 from "./pages/step-1";
+import Step2 from "./pages/step-2";
+import Step3 from "./pages/step-3";
+import Step4 from "./pages/step-4";
+import Step5 from "./pages/step-5";
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+export default function App() {
+	const [state, setState] = useState<{
+		step: "phone" | "email" | "otp" | "basic" | "address";
+		data: { phone: string };
+	}>({
+		step: "phone",
+		data: { phone: "" },
+	});
+	const [vaultData, setVaultData] = useState<FormValues>();
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
+	return (
+		<Fp.Provider
+			publicKey="pb_test_V0HWDsOXmQMZWywsUAkvGp"
+			redirectUrl="footprint://"
+			appearance={{
+				variables: {
+					colorAccent: "#493182",
+					buttonBorderRadius: "16px",
+					buttonPrimaryBg: "#493182",
+					buttonPrimaryHoverBg: "#33225C",
+					inputBorderRadius: "6",
+					inputBorderColor: "#493182",
+				},
+			}}
+		>
+			{state.step === "phone" && (
+				<Step1
+					onDone={(phone) => {
+						setState((prev) => ({
+							step: "email",
+							data: { ...prev.data, phone },
+						}));
+					}}
+				/>
+			)}
+			{state.step === "email" && (
+				<Step2
+					values={state.data}
+					onDone={() => {
+						setState((prev) => ({
+							...prev,
+							step: "otp",
+						}));
+					}}
+				/>
+			)}
+			{state.step === "otp" && (
+				<Step3
+					onDone={(data) => {
+						setVaultData(data);
+						setState((prev) => ({
+							...prev,
+							step: "basic",
+						}));
+					}}
+				/>
+			)}
+			{state.step === "basic" && (
+				<Step4
+					vaultData={vaultData}
+					onDone={() => {
+						setState((prev) => ({
+							...prev,
+							step: "address",
+						}));
+					}}
+				/>
+			)}
+			{state.step === "address" && (
+				<Step5
+					vaultData={vaultData}
+					onDone={() => {
+						// Handle completion of the flow
+						Alert.alert(
+							"Success",
+							"Your information has been submitted successfully.",
+							[{ text: "OK" }],
+						);
+						console.log("Flow completed");
+					}}
+				/>
+			)}
+		</Fp.Provider>
+	);
 }
-
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  /*
-   * To keep the template simple and small we're adding padding to prevent view
-   * from rendering under the System UI.
-   * For bigger apps the reccomendation is to use `react-native-safe-area-context`:
-   * https://github.com/AppAndFlow/react-native-safe-area-context
-   *
-   * You can read more about it here:
-   * https://github.com/react-native-community/discussions-and-proposals/discussions/827
-   */
-  const safePadding = '5%';
-
-  return (
-    <View style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
-        </View>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
-
-export default App;
